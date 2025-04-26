@@ -1,3 +1,4 @@
+'use client'
 import Image from "next/image"
 import { Mail, Phone, MapPin, Linkedin, Github, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -5,8 +6,40 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Navbar } from "@/components/navbar"
+import { createClient } from "@/lib/supabaseClient"
+import { useState, useEffect } from "react"
+
+
+type Proyecto = {
+  id: string
+  title: string
+  summary: string
+  description: string
+  technologies: string[]
+  orderNumber: number
+}
 
 export default function CurriculumPage() {
+  const supabase = createClient()
+  const [proyectos, setProyectos] = useState<Proyecto[]>([])
+
+  useEffect(() => {
+    const fetchProyectos = async () => {
+      const { data, error } = await supabase
+        .from('proyectos')
+        .select('*')
+        .order('order_number', { ascending: true })
+  
+      if (error) {
+        console.error('Error al obtener proyectos:', error)
+      } else {
+        setProyectos(data)
+      }
+    }
+  
+    fetchProyectos()
+  }, [])
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -225,39 +258,20 @@ export default function CurriculumPage() {
           <h2 className="text-2xl font-bold mb-6">Proyectos Destacados</h2>
 
           <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-xl font-semibold">Plataforma de E-learning</h3>
-                <p className="text-muted-foreground mb-3">Aplicación web para cursos online</p>
-                <p className="text-muted-foreground mb-3">
-                  Desarrollo de una plataforma completa de e-learning con funcionalidades de gestión de cursos, sistema
-                  de pagos, y análisis de progreso de estudiantes.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">React</Badge>
-                  <Badge variant="outline">Node.js</Badge>
-                  <Badge variant="outline">MongoDB</Badge>
-                  <Badge variant="outline">AWS</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-xl font-semibold">Aplicación de Gestión de Tareas</h3>
-                <p className="text-muted-foreground mb-3">Herramienta de productividad para equipos</p>
-                <p className="text-muted-foreground mb-3">
-                  Diseño e implementación de una aplicación para gestión de tareas y proyectos con funcionalidades de
-                  colaboración en tiempo real.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Next.js</Badge>
-                  <Badge variant="outline">TypeScript</Badge>
-                  <Badge variant="outline">PostgreSQL</Badge>
-                  <Badge variant="outline">Socket.io</Badge>
-                </div>
-              </CardContent>
-            </Card>
+            {proyectos.map((proyecto) => (
+              <Card key={proyecto.id}>
+                <CardContent className="pt-6">
+                  <h3 className="text-xl font-semibold">{proyecto.title}</h3>
+                  <p className="text-muted-foreground mb-3">{proyecto.summary}</p>
+                  <p className="text-muted-foreground mb-3">{proyecto.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {proyecto.technologies.map((tech, idx) => (
+                      <Badge key={idx} variant="outline">{tech}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
 
